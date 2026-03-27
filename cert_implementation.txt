@@ -1,0 +1,184 @@
+Eres un/a instructor/a senior experto/a en Kubernetes, Docker y desarrollo full‑stack.
+Quiero que redefinas **ÚNICAMENTE la sección del PROYECTO FINAL** del curso, con un enfoque **por etapas**, progresivo y totalmente ejecutable en **local**, antes de llevarlo a Kubernetes.
+
+El objetivo es que el estudiante:
+1) Primero entienda y construya cada parte del sistema
+2) Luego lo dockerice
+3) Finalmente lo despliegue en Kubernetes (kind)
+4) Implemente **certificados TLS gratuitos** para HTTPS
+
+---
+
+# 📌 Proyecto Final: Sistema Full‑Stack por Etapas (OBLIGATORIO)
+
+## 🎯 Objetivo general
+Construir un **sistema completo tipo “Gestor de Tareas” (Task Manager)** que incluya:
+- Base de datos PostgreSQL
+- Backend Node.js (Express)
+- Frontend React
+- API REST con CRUD completo
+- Ejecución local
+- Dockerización
+- Despliegue final en Kubernetes (kind)
+- Acceso HTTPS usando **certificados gratuitos**
+
+Todo debe funcionar **100% en local**, sin usar ningún Cloud Provider.
+
+---
+
+# 🧱 ETAPA 1 — Base de Datos (LOCAL)
+
+[sin cambios]
+
+---
+
+# 🧱 ETAPA 2 — Backend (LOCAL, SIN DOCKER)
+
+[sin cambios]
+
+---
+
+# 🧱 ETAPA 3 — Frontend (LOCAL)
+
+[sin cambios]
+
+---
+
+# 🧱 ETAPA 4 — Dockerización
+
+[sin cambios]
+
+---
+
+# 🧱 ETAPA 5 — Kubernetes (kind)
+
+[sin cambios]
+
+---
+
+# 🔐 ETAPA 6 — Certificados TLS Gratuitos (HTTPS)
+
+## Objetivo
+Habilitar **HTTPS** en el sistema desplegado en Kubernetes **usando certificados gratuitos**, sin depender de proveedores cloud.
+
+## Enfoque
+Usar **cert-manager** con:
+- Issuer tipo **SelfSigned** (para aprendizaje local)
+- Opción alternativa con **mkcert** (explicada)
+- Integración con **NGINX Ingress Controller**
+
+Aclarar:
+- Diferencias entre certificados locales vs producción
+- Por qué Let’s Encrypt no es viable sin dominio público
+- Qué cambia cuando se pasa a cloud en el futuro
+
+---
+
+## Requisitos
+- Cluster kind funcionando
+- NGINX Ingress instalado
+- kubectl configurado
+
+---
+
+## Entregables (OBLIGATORIO)
+
+### 1️⃣ Instalación de cert-manager
+Incluye:
+- Manifiestos oficiales
+- Namespace
+- Verificación de pods
+
+---
+
+### 2️⃣ Issuer / ClusterIssuer
+Incluye YAML completo para:
+- SelfSigned Issuer
+- Explicación clara de su alcance
+
+---
+
+### 3️⃣ Certificado TLS
+Incluye recurso `Certificate`:
+- Dominio local (ej: task-manager.local)
+- Secret generado automáticamente
+- Validación del secret
+
+---
+
+### 4️⃣ Ingress con HTTPS
+Actualiza el Ingress para:
+- Usar TLS
+- Referenciar el secret
+- Forzar HTTPS (si aplica)
+
+Incluye:
+- YAML completo del Ingress final
+- Hostname local
+- Configuración nginx relevante
+
+---
+
+### 5️⃣ Configuración local del dominio
+Incluye instrucciones para:
+- Modificar `/etc/hosts`
+- Resolver dominio local
+- Acceder vía navegador con HTTPS
+
+---
+
+## Validaciones
+Incluye pasos para:
+- Ver certificado creado
+- Ver secret TLS
+- Confirmar HTTPS en navegador
+- Inspeccionar certificado
+
+---
+
+## Troubleshooting TLS
+Incluye diagnóstico para:
+- Certificado no emitido
+- Secret no creado
+- Ingress sin TLS
+- Errores comunes en cert-manager
+- Logs clave a revisar
+
+---
+
+## Alternativa explicada (NO obligatoria)
+Explica brevemente:
+- Uso de `mkcert`
+- Diferencias vs cert-manager
+- Cuándo usar cada uno
+
+---
+
+# 🧪 ETAPA 7 — Validación y Troubleshooting General
+
+[sin cambios]
+
+---
+
+# 🧹 ETAPA 8 — Limpieza y siguientes pasos
+
+Incluye:
+- Eliminación de certificados
+- Limpieza de recursos cert-manager
+- Ideas de mejora:
+  - Certificados reales con dominio público
+  - Let’s Encrypt en cloud
+  - Automatización CI/CD
+  - Seguridad avanzada
+
+---
+
+# 📋 FORMATO FINAL
+- Markdown limpio
+- Secciones claras por ETAPA
+- Pasos numerados
+- Código siempre en bloques ```
+- Todo debe poder ejecutarse siguiendo tus instrucciones, sin suposiciones
+
+Devuélveme **solo esta sección del proyecto final**, perfectamente estructurada y lista para usarse como capstone del curso.
+``

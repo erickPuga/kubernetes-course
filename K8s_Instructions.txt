@@ -1,0 +1,422 @@
+Eres un/a instructor/a senior experto/a en Kubernetes, Docker y DevOps, con enfoque práctico, pedagógico y orientado a proyectos reales.
+Quiero que generes un **curso completo de Kubernetes**, dividido en **múltiples archivos Markdown (.md)**, pensado para **ejecutarse 100% en local** en una **Mac con Docker instalado**, **sin acceso a ningún Cloud Provider**.
+
+Usaremos:
+- Kubernetes local con **kind (Kubernetes IN Docker)**
+- Contenedores con **Docker**
+- CI/CD con **GitHub Actions (free tier)**
+- Backend: **Node.js (Express)**
+- Frontend: **React**
+- Base de datos: **PostgreSQL**
+- Ingress: **NGINX Ingress Controller**
+
+---
+
+# REGLAS IMPORTANTES
+1. El curso debe dividirse en **múltiples archivos Markdown**, no uno solo.
+2. Cada archivo debe enlazarse entre sí usando links relativos.
+3. Todo debe ser **ejecutable localmente**, sin AWS, GCP, Azure ni servicios externos.
+4. Incluye comandos reales, YAML reales y código funcional.
+5. Asume:
+   - Conocimientos básicos de terminal
+   - Conocimientos básicos de desarrollo web
+   - CERO conocimiento previo de Kubernetes
+6. Usa un enfoque **progresivo + práctico + orientado a troubleshooting real**.
+7. Cada módulo debe incluir:
+   - Objetivos
+   - Explicación
+   - Laboratorio práctico
+   - Validaciones
+   - Errores comunes
+8. Todo el código debe estar en bloques ``` bien formateados.
+
+---
+
+# ESTRUCTURA DEL CURSO (OBLIGATORIA)
+
+## 📁 Estructura de archivos
+Genera el curso con esta estructura exacta:
+
+/kubernetes-course
+│
+├── README.md
+├── 00-introduccion.md
+├── 01-kubernetes-basics.md
+├── 02-kind-local-cluster.md
+├── 03-pods-deployments-services.md
+├── 04-networking-ingress.md
+├── 05-configmaps-secrets.md
+├── 06-storage-postgresql.md
+├── 07-security-rbac.md
+├── 08-observability-operations.md
+├── 09-packaging-helm-kustomize.md
+├── 10-cicd-github-actions.md
+└── 11-proyecto-final.md
+
+---
+
+## README.md
+- Descripción del curso
+- Requisitos
+- Herramientas necesarias
+- Cómo navegar el curso
+- Mapa de aprendizaje
+- Link a cada módulo
+
+---
+
+## 00-introduccion.md
+- ¿Qué es Kubernetes?
+- Problemas que resuelve
+- Contenedores vs Kubernetes
+- Casos de uso reales
+- Glosario básico
+
+---
+
+## 01-kubernetes-basics.md
+- Arquitectura de Kubernetes
+- Control Plane vs Nodes
+- Pod, ReplicaSet, Deployment, Service
+- kubectl esencial
+- YAML básico
+
+### Lab:
+- Primer Deployment
+- Ver logs
+- Describe
+- Delete
+
+---
+
+## 02-kind-local-cluster.md
+- ¿Qué es kind y por qué usarlo?
+- Instalación en Mac
+- Crear cluster kind
+- Configuración recomendada
+- Cargar imágenes Docker locales
+- Eliminar cluster
+
+### Lab:
+- Crear cluster
+- Ver nodos
+- Cargar imagen custom
+
+---
+
+## 03-pods-deployments-services.md
+- Deployments
+- Services (ClusterIP, NodePort)
+- Labels y selectors
+- Scaling
+- Rolling updates
+
+---
+
+## 04-networking-ingress.md
+- Networking en Kubernetes
+- Ingress vs Service
+- Instalar NGINX Ingress en kind
+- Hosts y paths
+- Debugging de Ingress
+
+### Lab:
+- Publicar app vía Ingress
+- Acceder desde navegador
+
+---
+
+## 05-configmaps-secrets.md
+- ConfigMap vs Secret
+- Variables de entorno
+- Montaje como volumen
+- Buenas prácticas
+
+---
+
+## 06-storage-postgresql.md
+- Volúmenes
+- PVC
+- PostgreSQL en Kubernetes (modo aprendizaje)
+- Persistencia
+- Conexión desde backend
+
+### Incluye:
+- SQL completo:
+  - CREATE TABLE
+  - INSERT
+  - SELECT / UPDATE
+  - Índices
+
+---
+
+## 07-security-rbac.md
+- RBAC
+- Roles
+- RoleBindings
+- ServiceAccounts
+- Principio de mínimo privilegio
+
+---
+
+## 08-observability-operations.md
+- Probes (liveness/readiness)
+- Requests / limits
+- HPA (conceptual + local)
+- Logs
+- Introducción a Prometheus y Grafana
+
+---
+
+## 09-packaging-helm-kustomize.md
+- Helm vs Kustomize
+- Cuándo usar cada uno
+- Ejemplo simple con uno de ellos
+
+---
+
+## 10-cicd-github-actions.md
+- ¿Qué es CI/CD?
+- Pipeline para:
+  - Lint
+  - Build Docker images
+  - Tests
+- GitHub Actions (free tier)
+- Workflow YAML completo
+- Estrategia sin cloud (solo build y validación)
+- (Opcional) Deploy a kind local con self-hosted runner (explicado)
+
+Incluye:
+- `.github/workflows/ci.yml`
+
+---
+
+## 11-proyecto-final.md  ⭐ OBLIGATORIO
+
+Eres un/a instructor/a senior experto/a en Kubernetes, Docker y desarrollo full‑stack.
+Quiero que redefinas **ÚNICAMENTE la sección del PROYECTO FINAL** del curso, con un enfoque **por etapas**, progresivo y totalmente ejecutable en **local**, antes de llevarlo a Kubernetes.
+
+El objetivo es que el estudiante:
+1) Primero entienda y construya cada parte del sistema
+2) Luego lo dockerice
+3) Finalmente lo despliegue en Kubernetes (kind)
+
+---
+
+# 📌 Proyecto Final: Sistema Full‑Stack por Etapas (OBLIGATORIO)
+
+## 🎯 Objetivo general
+Construir un **sistema completo tipo “Gestor de Tareas” (Task Manager)** que incluya:
+- Base de datos PostgreSQL
+- Backend Node.js (Express)
+- Frontend React
+- API REST con CRUD completo
+- Ejecución local
+- Dockerización
+- Despliegue final en Kubernetes (kind)
+
+Todo debe funcionar **100% en local**, sin usar ningún Cloud Provider.
+
+---
+
+# 🧱 ETAPA 1 — Base de Datos (LOCAL)
+
+### Objetivo
+Diseñar y crear la base de datos **antes de Kubernetes**, entendiendo el modelo de datos.
+
+### Requisitos
+- PostgreSQL ejecutándose localmente (Docker permitido)
+
+### Entregables
+Incluye:
+- Diagrama lógico simple (texto)
+- SQL completo en bloques de código:
+  - CREATE DATABASE
+  - CREATE TABLE
+  - Índices
+  - INSERT de datos de ejemplo
+  - Queries reales usadas por el backend:
+    - SELECT
+    - INSERT
+    - UPDATE
+    - DELETE
+
+### Validaciones
+- Conectarse a la DB
+- Ejecutar queries manualmente
+- Ver datos persistidos
+
+---
+
+# 🧱 ETAPA 2 — Backend (LOCAL, SIN DOCKER)
+
+### Objetivo
+Crear el backend **conectado a la DB local**, sin contenedores aún.
+
+### Stack
+- Node.js
+- Express
+- pg (PostgreSQL client)
+
+### Funcionalidad mínima
+API REST con:
+- GET /health
+- GET /api/tasks
+- POST /api/tasks
+- PUT /api/tasks/:id
+- DELETE /api/tasks/:id
+
+### Entregables
+Incluye:
+- Estructura de carpetas
+- Código backend completo y funcional
+- Archivo `.env.example`
+- Conexión real a PostgreSQL
+- Manejo básico de errores
+
+### Validaciones
+- Probar endpoints con curl o HTTP client
+- Ver logs
+- Confirmar escritura en DB
+
+---
+
+# 🧱 ETAPA 3 — Frontend (LOCAL)
+
+### Objetivo
+Construir el frontend y consumir el backend local.
+
+### Stack
+- React
+- Fetch o Axios
+
+### Funcionalidad mínima
+- Listar tareas
+- Crear tarea
+- Editar tarea
+- Eliminar tarea
+- Manejo básico de estados y errores
+
+### Entregables
+Incluye:
+- Estructura del proyecto
+- Código React mínimo pero funcional
+- Variables de entorno para API URL
+- Build y ejecución local
+
+### Validaciones
+- Flujo completo frontend → backend → DB
+- UI funcional desde navegador
+
+---
+
+# 🧱 ETAPA 4 — Dockerización
+
+### Objetivo
+Convertir el sistema local en **contenedores Docker**.
+
+### Entregables
+Incluye:
+- Dockerfile para backend
+- Dockerfile para frontend
+- docker-compose.yml para desarrollo local que levante:
+  - PostgreSQL
+  - Backend
+  - Frontend
+
+### Validaciones
+- docker compose up
+- Acceso al frontend
+- Persistencia de DB
+- Logs de servicios
+
+---
+
+# 🧱 ETAPA 5 — Kubernetes (kind)
+
+### Objetivo
+Desplegar el sistema dockerizado en Kubernetes local.
+
+### Stack Kubernetes
+- kind
+- kubectl
+- NGINX Ingress Controller
+
+### Recursos Kubernetes (OBLIGATORIO)
+Incluye manifiestos YAML completos:
+- Namespace
+- Secret (credenciales DB)
+- ConfigMap (config backend)
+- PostgreSQL:
+  - PVC
+  - Deployment
+  - Service
+- Backend:
+  - Deployment
+  - Service
+  - Probes
+  - Requests / Limits
+- Frontend:
+  - Deployment
+  - Service
+- Ingress:
+  - Frontend
+  - Rutas /api al backend
+
+Nombra los archivos de forma ordenada:
+- 00-namespace.yaml
+- 01-secret.yaml
+- 02-postgres-pvc.yaml
+- ...
+
+---
+
+# 🧪 ETAPA 6 — Validación y Troubleshooting
+
+### Incluye guía práctica para:
+- Ver pods, services e ingress
+- Acceder a logs
+- Ejecutar comandos dentro de pods
+- Diagnosticar:
+  - CrashLoopBackOff
+  - ImagePullBackOff
+  - Problemas de conexión DB
+  - Fallas de Ingress / DNS
+
+---
+
+# 🧹 ETAPA 7 — Limpieza y siguientes pasos
+
+### Incluye:
+- Cómo borrar recursos
+- Cómo eliminar cluster kind
+- Ideas de mejoras futuras:
+  - Auth
+  - JWT
+  - HPA
+  - Observabilidad
+  - CI/CD
+
+---
+
+# 📋 FORMATO FINAL
+- Markdown limpio
+- Secciones claras por ETAPA
+- Pasos numerados
+- Código siempre en bloques ```
+- Todo debe poder ejecutarse siguiendo tus instrucciones, sin suposiciones
+
+Devuélveme **solo esta sección del proyecto final**, perfectamente estructurada y lista para usarse como capstone del curso.
+``
+
+---
+
+# FORMATO FINAL
+- Usa Markdown limpio
+- Usa títulos claros
+- Usa links relativos entre archivos
+- Código siempre en bloques ```
+- Todo debe ser ejecutable siguiendo tus instrucciones
+
+Devuélveme **todos los archivos Markdown**, uno por uno, claramente separados y listos para guardarse.
+``
