@@ -1,0 +1,57 @@
+# Namespace para la app
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app-prod
+---
+# ServiceAccount para el backend
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend-sa
+  namespace: app-prod
+---
+# Role: el backend puede leer pods y configmaps
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backend-role
+  namespace: app-prod
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch"]
+---
+# RoleBinding: asignar el role al ServiceAccount
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backend-rolebinding
+  namespace: app-prod
+subjects:
+- kind: ServiceAccount
+  name: backend-sa
+  namespace: app-prod
+roleRef:
+  kind: Role
+  name: backend-role
+  apiGroup: rbac.authorization.k8s.io
+---
+# Pod de prueba usando el ServiceAccount
+apiVersion: v1
+kind: Pod
+metadata:
+  name: backend-pod
+  namespace: app-prod
+spec:
+  serviceAccountName: backend-sa
+  containers:
+  - name: backend
+    image: curlimages/curl:latest
+    command: ["sleep", "3600"]

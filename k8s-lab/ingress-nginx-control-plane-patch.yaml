@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+spec:
+  template:
+    spec:
+      # Forzar que el pod SIEMPRE corra en el nodo control-plane
+      # donde los puertos 80 y 443 están mapeados
+      nodeSelector:
+        kubernetes.io/hostname: curso-k8s-control-plane

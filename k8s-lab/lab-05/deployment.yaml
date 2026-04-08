@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-demo
+  labels:
+    app: config-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: config-demo
+  template:
+    metadata:
+      labels:
+        app: config-demo
+    spec:
+      containers:
+      - name: config-demo
+        image: config-demo:v1
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+
+        # Variables de entorno desde ConfigMap
+        envFrom:
+        - configMapRef:
+            name: app-config
+
+        # Variables de entorno desde Secret
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secret
+
+        # Montar el archivo app.json desde el ConfigMap
+        volumeMounts:
+        - name: app-config-volume
+          mountPath: /app/config
+          readOnly: true
+
+      volumes:
+      - name: app-config-volume
+        configMap:
+          name: app-config
+          items:
+          - key: app.json
+            path: app.json
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: config-demo-service
+spec:
+  selector:
+    app: config-demo
+  ports:
+  - port: 80
+    targetPort: 3000
+  type: ClusterIP
