@@ -1,0 +1,251 @@
+node("AWS_2")
+{
+  List definitions = [
+    [$class: 'StringParameterDefinition', name: 'APP_ENV', defaultValue: "", description: "Pass in an enviorment list to limit how many files we create (Space Sperated List)"],
+    [$class: 'StringParameterDefinition', name: 'APP', defaultValue: "", description: "Pass in an application list to limit how many files we create (Space Sperated List)"],
+    [$class: 'StringParameterDefinition', name: 'TEMPLATE', defaultValue: "", description: "Pass in a template list to limit how many files we create (Space Sperated List)"],
+    [$class: 'StringParameterDefinition', name: 'CUSTOM_VARS', defaultValue: "", description: "Pass in a yaml dictionary with variables you want to set and override. Leave it empty if you don't have any custom variables to pass IE. {test: one, test2: two}. Only takes on argument."],
+    [$class: 'StringParameterDefinition', name: 'CUSTOM_STACK_NAME', defaultValue: "", description: "Pass in a custom cloud formation stack name. overwrites standard naming convtions"],
+    [$class: 'StringParameterDefinition', name: 'btBranch', defaultValue: "master", description: "Which BT branch to use"],
+    [$class: 'ChoiceParameterDefinition', name: 'ACTION',  choices : ['validate','deploy','deploy -r'],description: "Validate or deploy templates after creation, Deploy will fail if you are not Jenkins-admin , use deploy -r for rolloback option"],
+    
+  ]
+
+  properties([
+      [$class: 'ParametersDefinitionProperty', parameterDefinitions: definitions]
+  ])
+
+  Map libraryDependency =
+  [
+    "cdp-build" : "CDPBuild-latest",
+    "cdp-core-utilities" : "CDPCoreUtil-latest",
+  ]
+
+  libraryDependency.each
+  { libName,branch ->
+    library (identifier: "${libName}@${branch}", retriever: modernSCM([$class: 'GitSCMSource', credentialsId: 'skyhook-jenkins', remote: "git@bitbucket.org:skytouchtechnology/${libName}.git", traits: [
+        [$class: 'jenkins.plugins.git.traits.BranchDiscoveryTrait']
+      ]]))
+  }
+
+   currentBuild.displayName = "${params.btBranch} - ${params.ACTION} - ${params.APP} - ${params.TEMPLATE}  - [${params.APP_ENV}]"
+
+  if(params.ACTION.contains("deploy"))
+  {
+    List deployGroups = ["BuildTemplateDeploy","jenkins-admins"] // user must be in atleast one of these groups to use deploy action
+    String userGroups = ""
+    Boolean inDeployGroup = false
+    try 
+    {
+      wrap([$class: 'BuildUser']) 
+      {
+        userGroups = env.BUILD_USER_GROUPS
+        println("User :${env.BUILD_USER} ; Groups: ${userGroups}")
+      }
+    } 
+    catch (Exception e1) 
+    {
+      println("Unable to Determine User or User's Groups")
+      throw new Exception("Unable to Determine User or User's Groups : ${e1}")
+    }
+    String deployGroupUserIn = ""
+    for(int i = 0; i < deployGroups.size(); i++)
+    {
+      String deployGroup = deployGroups[i]
+      if (userGroups.contains(deployGroup))
+      {
+        deployGroupUserIn = deployGroup
+        inDeployGroup = true
+        break
+      }
+    }
+
+    if (inDeployGroup) 
+    {
+      println("User is allowed to deploy based on being in group(s) ${deployGroupUserIn}")
+    } 
+    else 
+    {
+      currentBuild.result = "ABORTED"
+      throw new Exception("User :${env.BUILD_USER} not in one of the approved deploy groups\n Deploy Groups: ${deployGroups};\nUser's Groups: ${userGroups}")
+    }
+  }
+
+  Map envAppParallel = [:]
+  List appsList = params.APP.tokenize(" ")
+  List envList = params.APP_ENV.tokenize(" ")
+  appsList.each 
+  { appName ->
+    envList.each
+    { appEnv ->
+      String btCommand = "cd buildTemplates/ && python3 buildTemplates.py -e ${appEnv} -a ${appName} -t ${TEMPLATE}"
+      
+      if (!(null == params.CUSTOM_VARS) && !params.CUSTOM_VARS.isEmpty()) 
+      {
+        btCommand += " --custom '${CUSTOM_VARS}'"
+      }
+              
+      if (!(null == params.CUSTOM_STACK_NAME) && !params.CUSTOM_STACK_NAME.isEmpty()) 
+      {
+        btCommand += " -n '${CUSTOM_STACK_NAME}'"  
+      }
+
+      btCommand += " --${ACTION}"
+      Closure btClosure = { runBt(appEnv,btCommand) }
+
+      envAppParallel ["${appEnv} - ${appName}"] = btClosure
+    }
+  }
+  parallel envAppParallel
+}
+
+void runBt(String appEnv,String btCommand)
+{
+  Map envDetails = getEnvDetails(appEnv)
+  String jenkinsCreds = envDetails.creds
+  String executeNode = envDetails.nodeName
+  
+  node(executeNode)
+  { 
+    Map scmParamsBT = [
+      branch: params.btBranch,
+      url: "git@bitbucket.org:skytouchtechnology/buildtemplates.git",
+      targetDirectory: "buildTemplates"
+    ]
+    cleanWs()
+    println("Checking Out BuildTemplate Repo on Branch: ${params.btBranch}")
+    scmCheckoutModule(scmParamsBT)
+    
+    withAWS(credentials: jenkinsCreds, region: 'us-west-2')
+    {
+      docker.withRegistry("https://749808731048.dkr.ecr.us-west-2.amazonaws.com", "ecr:us-west-2:${jenkinsCreds}")
+      {
+        docker.image("buildtemplates:2.2.4").inside("-v ${env.WORKSPACE}/buildTemplates:/buildTemplates -v /home/ubuntu/:/home/btUser")
+        {
+          try
+          {
+            shRunner("${btCommand}", false,true)
+            currentBuild.result = "SUCCESS"
+          }
+          catch (Exception shErr)
+          {
+            currentBuild.result = "FAILURE"
+            throw shErr
+          }//end catch block
+          finally
+          {
+            Map statusNotifierState =
+            [
+              "SUCCESS": "SUCCESSFUL",
+              "FAILURE": "FAILED"
+            ]
+            bitbucketStatusNotify(buildState: statusNotifierState[currentBuild.result])
+          }
+        } //end BTImage block
+      } // end registry block
+    } //end withAWS block
+    archiveArtifacts artifacts: 'buildTemplates/automation/*', fingerprint: true //archive the file to prevent deleting if node goes away
+    } //end node block
+}
+
+Map getEnvDetails(String appEnv)
+{
+  String jenkinsCredsId = ""
+  
+
+  switch(appEnv) 
+  {
+    case "intdata":
+      jenkinsCredsId = "intdata-jenkins-user"
+      break
+    case "intresin":
+      jenkinsCredsId = "intresin-jenkins-user"
+      break
+    case "int":
+    case ~/int.*/:
+      jenkinsCredsId = "int-jenkins-user"
+      break
+    
+    case "crt01":
+    case "qahose01":
+    case "qat":
+     jenkinsCredsId = "qat-jenkins-user"
+      break
+    
+    case "qat1":
+    case "sit":
+    case "rit":
+    case "chiqat":
+      jenkinsCredsId = "chiqat-jenkins-user"
+      break
+    
+    case "prd01":
+    case "prd":
+      jenkinsCredsId = "prd-jenkins-user"
+      break
+    
+    case "prd2":
+    case "chiprd":
+      jenkinsCredsId = "chiprd-jenkins-user"
+      break
+    
+    case "lt":
+    case "lt2":
+    case "lt3":
+    case "chilt":
+      jenkinsCredsId = "chilt-jenkins-user"
+      break
+    
+    case "sps":
+      jenkinsCredsId = "sps-jenkins-user"
+      break
+    
+    case "chisps":
+      jenkinsCredsId = "chisps-jenkins-user"
+      break
+    
+    case "chiltdata":
+      jenkinsCredsId = "chiltdata-jenkins-user"
+      break
+    
+    case "qatdata":
+      jenkinsCredsId = "qatdata-jenkins-user"
+      break
+    
+    case "chiqatdata":
+      jenkinsCredsId = "chiqatdata-jenkins-user"
+      break
+    
+    case "chiprddata":
+       jenkinsCredsId = "chiprddata-jenkins-user"
+      break
+    
+    case "prddata":
+      jenkinsCredsId = "prddata-jenkins-user"
+      break
+    case "qatresin":
+       jenkinsCredsId = "qatresin-jenkins-user"
+      break
+    case "chiltresin":
+       jenkinsCredsId = "chiltresin-jenkins-user"
+      break
+
+    case "chiqatresin":
+       jenkinsCredsId = "chiqatresin-jenkins-user"
+      break
+
+    case "prdresin":
+      jenkinsCredsId = "prdresin-jenkins-user"
+      break
+    
+    case "chiprdresin":
+      jenkinsCredsId = "chiprdresin-jenkins-user"
+      break
+    
+    default:
+      throw new Exception("Unknown Environment ${appEnv} given.\nPlease confirm app Id given is correct")
+      break
+  }
+  String jenkinsNode = (jenkinsCredsId.contains("chi"))? "AWS_CHISPS_DOCKER_ONLY" : "AWS_DOCKER_ONLY"
+  return ["creds":jenkinsCredsId,"nodeName": jenkinsNode]
+}
